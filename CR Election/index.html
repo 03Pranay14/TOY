@@ -3,511 +3,481 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Picker Wheel - Random Decision Generator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Advanced Rigged Picker Wheel</title>
     <style>
-        :root {
-            --primary: #3b82f6;
-            --bg-color: #f0f2f5;
-            --sidebar-bg: #ffffff;
-            --text-color: #333;
-        }
-
+        /* --- RESET & BASICS --- */
         * { box-sizing: border-box; }
-
         body {
-            font-family: 'Nunito', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
             margin: 0;
-            display: flex;
-            flex-direction: column;
             height: 100vh;
+            display: flex;
             overflow: hidden;
-        }
-
-        /* NAVBAR */
-        .navbar {
-            background: #fff;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            z-index: 100;
-        }
-        .logo {
-            font-weight: 900;
-            font-size: 1.2rem;
             color: #333;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
-        .logo span { color: #e11d48; }
 
-        /* MAIN LAYOUT */
-        .main-container {
+        /* --- LAYOUT --- */
+        .container {
             display: flex;
-            flex: 1;
+            width: 100%;
             height: 100%;
         }
 
-        /* LEFT SIDE: WHEEL */
+        /* Left Side: The Wheel */
         .wheel-section {
             flex: 2;
             display: flex;
             align-items: center;
             justify-content: center;
+            background-color: #ffffff;
             position: relative;
-            background: #ecf0f1; /* Subtle pattern bg could go here */
+            border-right: 1px solid #e5e7eb;
         }
 
-        .wheel-wrapper {
-            position: relative;
-            width: 500px;
-            height: 500px;
-            max-width: 90vw;
-            max-height: 90vw;
+        /* Right Side: Inputs Panel */
+        .input-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f9fafb;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
         }
 
-        #wheel {
+        /* --- INPUTS PANEL STYLES --- */
+        .panel-header {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .entry-count {
+            background: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .input-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 10px;
+        }
+
+        .input-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+
+        .input-item:last-child { border-bottom: none; }
+        
+        .input-item.removed {
+            opacity: 0.5;
+            text-decoration: line-through;
+            background-color: #fef2f2;
+        }
+
+        .input-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            accent-color: #4F46E5;
+            cursor: not-allowed;
+        }
+
+        .input-text {
+            flex-grow: 1;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        /* --- WHEEL STYLES --- */
+        .wheel-container {
+            position: relative;
+            width: 80vh; /* Responsive based on height */
+            height: 80vh;
+            max-width: 600px;
+            max-height: 600px;
+            filter: drop-shadow(0 10px 25px rgba(0,0,0,0.15));
+        }
+
+        canvas {
             width: 100%;
             height: 100%;
+            display: block;
             border-radius: 50%;
-            border: 12px solid #fff;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-            transform: rotate(0deg);
-            position: relative;
-            overflow: hidden;
         }
 
-        /* The Triangle Pointer */
+        /* The Pointer (Triangle on the right) */
         .pointer {
             position: absolute;
-            top: -5px; /* Adjust to overlap border slightly */
-            right: -25px; /* Right side pointer like PickerWheel */
             top: 50%;
+            right: -25px; /* Stick out to the right */
             transform: translateY(-50%) rotate(-90deg);
-            width: 0; 
-            height: 0; 
+            width: 0;
+            height: 0;
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
-            border-top: 35px solid #333;
+            border-top: 40px solid #333;
             z-index: 20;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
-        }
-        
-        /* Note: Original pickerwheel usually has pointer on the right. 
-           We need to rotate text logic if we move pointer. 
-           Let's stick to TOP pointer for code stability, but style it to look cool. */
-        .pointer-top {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0; 
-            height: 0; 
-            border-left: 25px solid transparent;
-            border-right: 25px solid transparent;
-            border-top: 40px solid #ffffff; /* White border look */
-            z-index: 20;
-        }
-        .pointer-inner {
-            position: absolute;
-            top: -42px;
-            left: -15px;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid #333;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
 
-        /* CENTER SPIN BUTTON */
-        .center-hub {
+        /* Center Spin Button */
+        .spin-btn {
             position: absolute;
-            top: 50%; left: 50%;
+            top: 50%;
+            left: 50%;
             transform: translate(-50%, -50%);
-            width: 80px; height: 80px;
-            background: white;
+            width: 80px;
+            height: 80px;
+            background: #1F2937; /* Dark button like screenshot */
             border-radius: 50%;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);
-            z-index: 10;
+            border: 4px solid #ffffff;
+            box-shadow: 0 0 0 2px #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 30;
             cursor: pointer;
-            border: 4px solid #e2e8f0;
-            transition: 0.2s;
+            transition: transform 0.1s, background 0.2s;
         }
-        .center-hub:hover { transform: translate(-50%, -50%) scale(1.05); }
-        .center-hub:active { transform: translate(-50%, -50%) scale(0.95); }
+
+        .spin-btn:hover { transform: translate(-50%, -50%) scale(1.05); background: #111827; }
+        .spin-btn:active { transform: translate(-50%, -50%) scale(0.95); }
         
         .spin-text {
-            font-weight: 800;
-            color: #333;
-            font-size: 1.2rem;
-            user-select: none;
-        }
-
-        .wheel-label {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 50%; height: 20px;
-            transform-origin: 0% 50%;
-            text-align: right;
-            padding-right: 50px;
             color: white;
+            font-weight: 800;
             font-size: 16px;
-            font-weight: 700;
-            text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
-            line-height: 20px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
-        /* RIGHT SIDE: INPUTS */
-        .sidebar {
-            flex: 1;
-            background: var(--sidebar-bg);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid #e5e7eb;
-            min-width: 300px;
-            max-width: 400px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
-        }
-        .tab { font-weight: 700; color: #3b82f6; cursor: pointer; }
-        .tab.inactive { color: #9ca3af; }
-
-        .input-area {
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 5px;
-            display: flex;
-            margin-bottom: 20px;
-        }
-        .input-area input {
-            border: none;
-            flex: 1;
-            padding: 10px;
-            outline: none;
-            font-size: 1rem;
-        }
-        .add-btn {
-            background: #eef2ff;
-            color: #3b82f6;
-            border: none;
-            padding: 0 20px;
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 6px;
-        }
-        .add-btn:hover { background: #e0e7ff; }
-
-        .entries-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-        .entry-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            border-bottom: 1px solid #f3f4f6;
-            font-size: 0.95rem;
-        }
-        .entry-item:hover { background: #f9fafb; }
-
-        /* MODAL */
+        /* --- MODAL --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
+            background: rgba(0,0,0,0.4);
+            display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(2px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
         }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            animation: popIn 0.3s ease;
-            position: relative;
-            max-width: 400px;
-            width: 90%;
+            background: white; padding: 40px; border-radius: 12px;
+            text-align: center; width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            transform: scale(0.9); transition: transform 0.3s;
         }
-        @keyframes popIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .result-value { font-size: 48px; font-weight: 800; color: #4F46E5; margin: 20px 0; }
+        .close-btn {
+            background: #4F46E5; color: white; border: none;
+            padding: 10px 24px; border-radius: 6px;
+            font-weight: 600; cursor: pointer; font-size: 16px;
         }
-        
-        .winner-title { font-size: 1.2rem; color: #6b7280; margin-bottom: 10px; }
-        .winner-name { font-size: 3rem; font-weight: 900; color: #333; margin: 0; line-height: 1.2; }
-        
-        .modal-buttons {
-            margin-top: 30px;
+        .close-btn:hover { background: #4338ca; }
+
+        /* Ads placeholder to look like screenshot footer */
+        .footer-ad {
+            height: 80px;
+            background: #fffbeb;
+            border-top: 1px solid #fcd34d;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
             display: flex;
-            gap: 10px;
+            align-items: center;
             justify-content: center;
+            font-size: 14px;
+            color: #92400e;
+            z-index: 50;
         }
-        .btn-modal {
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            font-size: 1rem;
-        }
-        .btn-close { background: #f3f4f6; color: #333; }
-        .btn-hide { background: #3b82f6; color: white; }
-
-        /* Confetti */
-        .confetti {
-            position: absolute;
-            width: 10px; height: 10px;
-            background-color: #f00;
-            animation: fall linear forwards;
-        }
-        @keyframes fall {
-            to { transform: translateY(100vh) rotate(720deg); }
-        }
-
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="logo">Picker<span>Wheel</span></div>
-    </nav>
-
-    <div class="main-container">
+    <div class="container">
         <div class="wheel-section">
-            <div class="wheel-wrapper">
-                <div class="pointer-top">
-                    <div class="pointer-inner"></div>
-                </div>
-                <div id="wheel"></div>
-                
-                <div class="center-hub" id="spinBtn" onclick="spinWheel()">
+            <div class="wheel-container">
+                <div class="pointer" style="right: -25px; top: 50%; transform: translateY(-50%) rotate(-90deg);"></div>
+                <canvas id="wheelCanvas" width="800" height="800"></canvas>
+                <div class="spin-btn" id="spinBtn">
                     <span class="spin-text">SPIN</span>
                 </div>
             </div>
         </div>
 
-        <div class="sidebar">
-            <div class="tabs">
-                <div class="tab">Inputs</div>
-                <div class="tab inactive">Tools</div>
+        <div class="input-section">
+            <div class="panel-header">
+                <span class="panel-title">INPUTS</span>
+                <span class="entry-count" id="entryCount">10</span>
             </div>
             
-            <div class="input-area">
-                <input type="text" id="nameInput" placeholder="Add name..." onkeypress="handleEnter(event)">
-                <button class="add-btn" onclick="addName()">+</button>
-            </div>
-
-            <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 10px; display: flex; justify-content: space-between;">
-                <span>Entries</span>
-                <span id="countDisplay">0</span>
-            </div>
-
-            <div class="entries-list" id="nameList">
+            <div class="input-list" id="inputList">
                 </div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="resultModal">
+    <div class="modal-overlay" id="modal">
         <div class="modal-content">
-            <div class="winner-title">We have a winner!</div>
-            <h1 class="winner-name" id="winnerText">Name</h1>
-            <div class="modal-buttons">
-                <button class="btn-modal btn-hide" onclick="closeModalAndEliminate()">Done</button>
-            </div>
+            <h2 style="margin:0; color:#6B7280; font-size:18px;">We have a winner!</h2>
+            <div class="result-value" id="resultValue">?</div>
+            <button class="close-btn" id="closeModal">Done</button>
         </div>
     </div>
 
-    <script>
-        // --- RIGGED LOGIC ---
-        let participants = [];
-        let winnerQueue = [];    // Top 8
-        let sarthakQueue = [];   // Sarthak
-        let isSpinning = false;
-        let globalRotation = 0;
-        let slotsFilled = 0;     // Permanent Counter
+    <div class="footer-ad">
+        <span style="font-weight:bold; margin-right: 10px;">Ad</span> Save 55% on Creative Cloud Pro.
+    </div>
 
-        // PickerWheel Style Colors
+    <script>
+        // --- CONFIGURATION ---
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const inputListEl = document.getElementById('inputList');
+        const entryCountEl = document.getElementById('entryCount');
+        const modal = document.getElementById('modal');
+        const resultValueEl = document.getElementById('resultValue');
+        const closeModalBtn = document.getElementById('closeModal');
+
+        // Current Active Items
+        let items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        
+        // Rigged Sequence (Fixed)
+        // Logic: We will pick items from this list in order.
+        // If an item is already removed, we skip it.
+        const riggedSequence = [10, 5, 8, 7, 1, 3, 4, 2, 6, 9];
+        let rigIndex = 0;
+
+        // Visual Colors (Matching Earthy tones from screenshot + extras)
         const colors = [
-            "#3369e8", "#d50f25", "#eeb211", "#009925", 
-            "#00b2cc", "#ff6d00", "#5e35b1", "#e91e63"
+            '#3b6e26', // Dark Green
+            '#aeb041', // Olive/Gold
+            '#f7b926', // Mustard Yellow
+            '#e76f51', '#2a9d8f', '#264653', '#e9c46a', '#f4a261', '#e74c3c', '#8e44ad'
         ];
 
-        function addName() {
-            const input = document.getElementById('nameInput');
-            const name = input.value.trim();
-            if (!name) return;
+        // State
+        let currentRotation = 0;
+        let isSpinning = false;
 
-            const isSarthak = name.toLowerCase() === "sarthak";
+        // --- RENDER INPUT LIST ---
+        function renderInputList() {
+            inputListEl.innerHTML = '';
+            // We iterate through the original sequence to keep order, but check if they exist in 'items'
+            const fullList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Or we can just use current items
+            
+            // To show removed items as "crossed out", we need to know what was removed.
+            // Let's use a master list.
+            const masterList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            
+            masterList.forEach(val => {
+                const exists = items.includes(val);
+                const div = document.createElement('div');
+                div.className = `input-item ${exists ? '' : 'removed'}`;
+                
+                div.innerHTML = `
+                    <input type="checkbox" class="input-checkbox" ${exists ? 'checked' : ''} disabled>
+                    <span class="input-text">Option ${val}</span>
+                `;
+                inputListEl.appendChild(div);
+            });
 
-            // LOGIC:
-            if (isSarthak) {
-                sarthakQueue.push(name);
-            } else if (slotsFilled < 8) {
-                winnerQueue.push(name);
-                slotsFilled++;
-            }
-
-            participants.push(name);
-            input.value = "";
-            renderUI();
+            entryCountEl.innerText = items.length;
         }
 
-        function handleEnter(e) { if (e.key === "Enter") addName(); }
-
-        function renderUI() {
-            // Update List
-            const list = document.getElementById('nameList');
-            const count = document.getElementById('countDisplay');
-            list.innerHTML = "";
-            participants.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'entry-item';
-                div.innerText = p;
-                list.appendChild(div);
-            });
-            count.innerText = participants.length;
-
-            // Update Wheel
-            const wheel = document.getElementById('wheel');
-            wheel.innerHTML = "";
+        // --- DRAW WHEEL ---
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2 - 10;
             
-            if (participants.length === 0) {
-                wheel.style.background = "#fff";
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (items.length === 0) {
+                // Empty Wheel State
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.fillStyle = "#eee";
+                ctx.fill();
                 return;
             }
 
-            const slice = 360 / participants.length;
-            let gradientStr = "conic-gradient(";
+            const arcSize = (Math.PI * 2) / items.length;
 
-            participants.forEach((name, i) => {
-                const start = (i / participants.length) * 100;
-                const end = ((i + 1) / participants.length) * 100;
-                const color = colors[i % colors.length];
-                gradientStr += `${color} ${start}% ${end}%,`;
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(currentRotation * Math.PI / 180);
 
-                // Label
-                const label = document.createElement('div');
-                label.className = 'wheel-label';
-                label.innerText = name;
-                const angle = (slice * i) + (slice / 2) - 90; // -90 because 0deg is top
-                label.style.transform = `rotate(${angle}deg)`;
-                wheel.appendChild(label);
+            items.forEach((item, i) => {
+                const angle = i * arcSize;
+                
+                // Segment
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, angle, angle + arcSize);
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                ctx.strokeStyle = "rgba(255,255,255,0.2)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Text
+                ctx.save();
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 60px sans-serif";
+                ctx.fillText(item, radius - 50, 20);
+                ctx.restore();
             });
 
-            gradientStr = gradientStr.slice(0, -1) + ")";
-            wheel.style.background = gradientStr;
+            ctx.restore();
         }
 
-        function spinWheel() {
-            if (isSpinning || participants.length === 0) return;
+        // --- ANIMATION LOGIC ---
+        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-            // DETERMINE WINNER
-            let winnerName = null;
-            if (winnerQueue.length > 0) {
-                // Priority 1: Top 8
-                const r = Math.floor(Math.random() * winnerQueue.length);
-                winnerName = winnerQueue[r];
-            } else if (sarthakQueue.length > 0) {
-                // Priority 2: Sarthak
-                winnerName = sarthakQueue[0];
-            } else {
-                // Priority 3: Random leftovers
-                const r = Math.floor(Math.random() * participants.length);
-                winnerName = participants[r];
-            }
-
+        function spin() {
+            if (isSpinning || items.length === 0) return;
             isSpinning = true;
 
-            // CALCULATE MATH
-            const visualIndex = participants.indexOf(winnerName);
-            const sliceSize = 360 / participants.length;
+            // 1. DETERMINE TARGET FROM RIGGED LIST
+            let target = null;
             
-            // Center of slice
-            const centerAngle = (visualIndex * sliceSize) + (sliceSize / 2);
-            
-            // Add randomness (+/- 40% of slice)
-            const variance = (Math.random() * sliceSize * 0.8) - (sliceSize * 0.4);
-            
-            // We want to land on (centerAngle + variance).
-            // To bring that angle to the TOP (0deg), we rotate backwards by that amount.
-            // Add spins (e.g. 8 spins = 2880 deg)
-            const targetRotation = 2880 - (centerAngle + variance);
-
-            // Handle cumulative rotation
-            const currentMod = globalRotation % 360;
-            globalRotation += targetRotation - currentMod; 
-            // Ensure we are always adding positive rotation to spin CW
-            if (globalRotation < 0) globalRotation += 36000;
-            globalRotation += 3600; // Extra safety spins
-
-            const wheel = document.getElementById('wheel');
-            wheel.style.transform = `rotate(${globalRotation}deg)`;
-
-            // WAIT FOR STOP
-            setTimeout(() => {
-                showResult(winnerName);
-            }, 4000);
-        }
-
-        // --- MODAL & EFFECTS ---
-        let currentWinner = null;
-
-        function showResult(name) {
-            currentWinner = name;
-            document.getElementById('winnerText').innerText = name;
-            document.getElementById('resultModal').style.display = 'flex';
-            fireConfetti();
-        }
-
-        function closeModalAndEliminate() {
-            document.getElementById('resultModal').style.display = 'none';
-            
-            // Eliminate Logic
-            if (currentWinner) {
-                participants = participants.filter(p => p !== currentWinner);
-                winnerQueue = winnerQueue.filter(w => w !== currentWinner);
-                sarthakQueue = sarthakQueue.filter(s => s !== currentWinner);
-                renderUI();
+            // Loop through rigged sequence to find the next available number
+            // (In case the user manually modified things, or we just moved to next)
+            while (target === null && rigIndex < riggedSequence.length) {
+                const candidate = riggedSequence[rigIndex];
+                if (items.includes(candidate)) {
+                    target = candidate;
+                    // Note: We do NOT increment rigIndex here. We increment it AFTER the spin completes.
+                    // This ensures we don't skip numbers if the animation is cancelled.
+                } else {
+                    rigIndex++; // Skip this rigged number if it's not in the wheel anymore
+                }
             }
+
+            // Fallback: If rigged sequence is exhausted or invalid, pick random
+            if (target === null) {
+                const randomIdx = Math.floor(Math.random() * items.length);
+                target = items[randomIdx];
+            }
+
+            // 2. CALCULATE ROTATION
+            // Pointer is at 0 degrees (Right side) in Canvas terms (actually, let's fix the pointer logic).
+            // In Canvas, 0 is 3 o'clock.
+            // If we draw segments starting from 0, the first segment is 0 to (360/N).
+            // To land Segment X on the Pointer (0 deg), we need to rotate the wheel such that Segment X is at 0.
+            // Actually, visually, the pointer is at the Right (0 degrees).
+            // So we need the center of the target segment to end up at 0 degrees (or 360).
+
+            const targetIndex = items.indexOf(target);
+            const segmentAngle = 360 / items.length;
             
+            // The center of the target segment is currently at:
+            // (targetIndex * segmentAngle) + (segmentAngle / 2)
+            const currentPos = (targetIndex * segmentAngle) + (segmentAngle / 2);
+            
+            // We want to rotate the wheel backwards so this point hits 0.
+            // Rotation = 360 - currentPos.
+            // Add jitter
+            const jitter = Math.floor(Math.random() * (segmentAngle * 0.8)) - (segmentAngle * 0.4);
+            const landingRotation = 360 - currentPos + jitter;
+
+            // Add spins (5 to 10 full spins)
+            const extraSpins = (5 + Math.floor(Math.random() * 5)) * 360;
+            const totalRotation = currentRotation + extraSpins + (landingRotation - (currentRotation % 360));
+            
+            // Ensure positive forward movement
+            let finalTargetRot = totalRotation;
+            if (finalTargetRot <= currentRotation) finalTargetRot += 360;
+
+            // 3. ANIMATE
+            const duration = 5000; // 5 seconds
+            const startTime = performance.now();
+            const startRot = currentRotation;
+
+            function animate(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const ease = easeOutCubic(progress);
+
+                currentRotation = startRot + (finalTargetRot - startRot) * ease;
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    endGame(target);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function endGame(target) {
             isSpinning = false;
+            
+            // Show Modal
+            resultValueEl.innerText = target;
+            modal.classList.add('active');
+
+            // --- REMOVE LOGIC ---
+            // 1. Remove from items array
+            items = items.filter(i => i !== target);
+            
+            // 2. Advance Rigged Index (So next spin gets next number)
+            rigIndex++;
+
+            // 3. Update Inputs Panel UI
+            renderInputList();
+            
+            // 4. Redraw wheel happens when modal closes to avoid jarring shift
         }
 
-        // --- CONFETTI HELPER ---
-        function fireConfetti() {
-            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
-            for (let i = 0; i < 100; i++) {
-                const conf = document.createElement('div');
-                conf.className = 'confetti';
-                conf.style.left = Math.random() * 100 + 'vw';
-                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
-                document.body.appendChild(conf);
-                
-                // Cleanup
-                setTimeout(() => conf.remove(), 4000);
-            }
-        }
+        // Close Modal & Redraw Wheel with removed item
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+            // The item was already removed from data, now we just see the updated wheel
+            // We reset rotation visually to 0 to keep math simple for next spin? 
+            // Or keep it. If we keep it, the segments shift.
+            // Easier to keep current rotation but the segments will change size.
+            // Let's just redraw.
+            drawWheel();
+        });
+
+        spinBtn.addEventListener('click', spin);
+
+        // Init
+        renderInputList();
+        drawWheel();
+        
     </script>
 </body>
 </html>
