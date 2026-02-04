@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Rigged Picker Wheel</title>
+    <title>Picker Wheel Pro (Stealth Mode)</title>
     <style>
         /* --- RESET & BASICS --- */
         * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f3f4f6;
+            background-color: #f0f2f5;
             margin: 0;
             height: 100vh;
             display: flex;
@@ -26,118 +26,127 @@
 
         /* Left Side: The Wheel */
         .wheel-section {
-            flex: 2;
+            flex: 65; /* 65% width */
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #ffffff;
             position: relative;
-            border-right: 1px solid #e5e7eb;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.02);
         }
 
         /* Right Side: Inputs Panel */
         .input-section {
-            flex: 1;
+            flex: 35; /* 35% width */
             min-width: 300px;
-            background-color: #f9fafb;
+            background-color: #fff;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            border-left: 1px solid #ddd;
         }
 
-        /* --- INPUTS PANEL STYLES --- */
+        /* --- INPUTS UI --- */
         .panel-header {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
         }
 
-        .panel-title {
-            font-size: 18px;
+        .header-title {
+            font-size: 20px;
             font-weight: 700;
-            color: #111827;
-        }
-
-        .entry-count {
-            background: #e5e7eb;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .input-list {
-            flex-grow: 1;
-            overflow-y: auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            padding: 10px;
-        }
-
-        .input-item {
+            color: #111;
             display: flex;
             align-items: center;
-            padding: 8px 10px;
-            border-bottom: 1px solid #f3f4f6;
+            gap: 10px;
+        }
+
+        .count-badge {
+            background: #eee;
+            color: #555;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tool-btn {
+            background: #f0f2f5;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #555;
             transition: background 0.2s;
         }
+        .tool-btn:hover { background: #e4e6eb; }
 
-        .input-item:last-child { border-bottom: none; }
-        
-        .input-item.removed {
-            opacity: 0.5;
-            text-decoration: line-through;
-            background-color: #fef2f2;
-        }
-
-        .input-checkbox {
-            width: 18px;
-            height: 18px;
-            margin-right: 12px;
-            accent-color: #4F46E5;
-            cursor: not-allowed;
-        }
-
-        .input-text {
+        .input-area-container {
             flex-grow: 1;
-            font-size: 14px;
-            color: #374151;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            background: #f9f9f9;
         }
 
-        /* --- WHEEL STYLES --- */
-        .wheel-container {
-            position: relative;
-            width: 80vh; /* Responsive based on height */
-            height: 80vh;
-            max-width: 600px;
-            max-height: 600px;
-            filter: drop-shadow(0 10px 25px rgba(0,0,0,0.15));
-        }
-
-        canvas {
+        /* The main input box */
+        textarea {
             width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 50%;
+            flex-grow: 1;
+            border: none;
+            padding: 20px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            background: #f9f9f9;
+            color: #333;
+        }
+        
+        textarea::placeholder { color: #aaa; }
+
+        /* Fake "Input Row" look for the placeholder area */
+        .input-header-fake {
+            display: flex;
+            align-items: center;
+            background: #e4e6eb;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
         }
 
-        /* The Pointer (Triangle on the right) */
+        /* --- WHEEL VISUALS --- */
+        .wheel-wrapper {
+            position: relative;
+            width: 85vh;
+            height: 85vh;
+            max-width: 650px;
+            max-height: 650px;
+            filter: drop-shadow(0 15px 35px rgba(0,0,0,0.1));
+        }
+
+        canvas { width: 100%; height: 100%; display: block; border-radius: 50%; }
+
         .pointer {
             position: absolute;
-            top: 50%;
-            right: -25px; /* Stick out to the right */
+            top: 50%; right: -25px;
             transform: translateY(-50%) rotate(-90deg);
-            width: 0;
-            height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 40px solid #333;
+            width: 0; height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 50px solid #333;
             z-index: 20;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
@@ -145,77 +154,50 @@
         /* Center Spin Button */
         .spin-btn {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 80px;
-            height: 80px;
-            background: #1F2937; /* Dark button like screenshot */
+            width: 90px; height: 90px;
+            background: #333;
             border-radius: 50%;
-            border: 4px solid #ffffff;
-            box-shadow: 0 0 0 2px #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 30;
-            cursor: pointer;
-            transition: transform 0.1s, background 0.2s;
+            border: 5px solid #ffffff;
+            box-shadow: 0 0 0 1px #ddd;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 30; cursor: pointer;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
-        .spin-btn:hover { transform: translate(-50%, -50%) scale(1.05); background: #111827; }
-        .spin-btn:active { transform: translate(-50%, -50%) scale(0.95); }
-        
-        .spin-text {
-            color: white;
-            font-weight: 800;
-            font-size: 16px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+        .spin-btn:hover { transform: translate(-50%, -50%) scale(1.1); background: #111; }
+        .spin-text { color: white; font-weight: 800; font-size: 18px; letter-spacing: 1px; }
 
         /* --- MODAL --- */
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.3s;
-            z-index: 100;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 100;
+            backdrop-filter: blur(2px);
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background: white; padding: 40px; border-radius: 12px;
-            text-align: center; width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-            transform: scale(0.9); transition: transform 0.3s;
+            background: white; padding: 40px 50px; border-radius: 16px;
+            text-align: center; min-width: 320px;
+            transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
         }
         .modal-overlay.active .modal-content { transform: scale(1); }
-        .result-value { font-size: 48px; font-weight: 800; color: #4F46E5; margin: 20px 0; }
+        .result-value { font-size: 50px; font-weight: 800; color: #333; margin: 15px 0 30px 0; }
         .close-btn {
-            background: #4F46E5; color: white; border: none;
-            padding: 10px 24px; border-radius: 6px;
-            font-weight: 600; cursor: pointer; font-size: 16px;
+            background: #333; color: white; border: none; padding: 12px 30px;
+            border-radius: 50px; font-weight: 600; cursor: pointer; font-size: 16px;
+            transition: background 0.2s;
         }
-        .close-btn:hover { background: #4338ca; }
+        .close-btn:hover { background: #000; }
 
-        /* Ads placeholder to look like screenshot footer */
+        /* Ads Footer placeholder */
         .footer-ad {
-            height: 80px;
-            background: #fffbeb;
-            border-top: 1px solid #fcd34d;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            color: #92400e;
-            z-index: 50;
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: #fff8e1; border-top: 1px solid #ffe082;
+            height: 60px; display: flex; align-items: center; justify-content: center;
+            font-size: 13px; color: #888; z-index: 50;
         }
     </style>
 </head>
@@ -223,261 +205,248 @@
 
     <div class="container">
         <div class="wheel-section">
-            <div class="wheel-container">
-                <div class="pointer" style="right: -25px; top: 50%; transform: translateY(-50%) rotate(-90deg);"></div>
+            <div class="wheel-wrapper">
+                <div class="pointer"></div>
                 <canvas id="wheelCanvas" width="800" height="800"></canvas>
-                <div class="spin-btn" id="spinBtn">
-                    <span class="spin-text">SPIN</span>
-                </div>
+                <div class="spin-btn" id="spinBtn"><span class="spin-text">SPIN</span></div>
             </div>
         </div>
 
         <div class="input-section">
             <div class="panel-header">
-                <span class="panel-title">INPUTS</span>
-                <span class="entry-count" id="entryCount">10</span>
+                <div class="header-title">
+                    <span>Main INPUTS</span>
+                    <span class="count-badge" id="countBadge">15</span>
+                </div>
+                <div class="toolbar">
+                    <button class="tool-btn">Shuffle</button>
+                    <button class="tool-btn">Sort</button>
+                    <button class="tool-btn">Images</button>
+                </div>
             </div>
             
-            <div class="input-list" id="inputList">
-                </div>
+            <div class="input-header-fake">
+                <span>Label</span>
+                <span style="margin-left: auto; color:#999; font-weight:400;">Type or paste multiple line</span>
+            </div>
+
+            <div class="input-area-container">
+                <textarea id="optInput" placeholder="Enter options here..."></textarea>
+            </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="modal">
         <div class="modal-content">
-            <h2 style="margin:0; color:#6B7280; font-size:18px;">We have a winner!</h2>
+            <h2 style="margin:0; color:#888; font-size:16px; text-transform:uppercase; letter-spacing:1px;">We have a winner</h2>
             <div class="result-value" id="resultValue">?</div>
-            <button class="close-btn" id="closeModal">Done</button>
+            <button class="close-btn" id="closeModal">OK</button>
         </div>
     </div>
 
     <div class="footer-ad">
-        <span style="font-weight:bold; margin-right: 10px;">Ad</span> Save 55% on Creative Cloud Pro.
+        <span style="background:#f0ad4e; color:white; padding:2px 5px; border-radius:3px; font-weight:bold; margin-right:10px; font-size:10px;">Ad</span>
+        Save 55% on Creative Cloud Pro.
     </div>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- DOM ELEMENTS ---
         const canvas = document.getElementById('wheelCanvas');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
-        const inputListEl = document.getElementById('inputList');
-        const entryCountEl = document.getElementById('entryCount');
+        const optInput = document.getElementById('optInput');
+        const countBadge = document.getElementById('countBadge');
         const modal = document.getElementById('modal');
-        const resultValueEl = document.getElementById('resultValue');
-        const closeModalBtn = document.getElementById('closeModal');
+        const resultValue = document.getElementById('resultValue');
+        const closeModal = document.getElementById('closeModal');
 
-        // Current Active Items
-        let items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        
-        // Rigged Sequence (Fixed)
-        // Logic: We will pick items from this list in order.
-        // If an item is already removed, we skip it.
-        const riggedSequence = [10, 5, 8, 7, 1, 3, 4, 2, 6, 9];
-        let rigIndex = 0;
-
-        // Visual Colors (Matching Earthy tones from screenshot + extras)
-        const colors = [
-            '#3b6e26', // Dark Green
-            '#aeb041', // Olive/Gold
-            '#f7b926', // Mustard Yellow
-            '#e76f51', '#2a9d8f', '#264653', '#e9c46a', '#f4a261', '#e74c3c', '#8e44ad'
-        ];
-
-        // State
+        // --- DATA STATE ---
+        let items = [];
         let currentRotation = 0;
         let isSpinning = false;
+        
+        // --- RIGGED LOGIC SETUP ---
+        // This is hidden in the code. 
+        // Logic: If the items on the wheel match these numbers, we pick them in THIS order.
+        // If the items are random text, we pick the FIRST item in the list (FIFO).
+        const secretSequence = ["7", "5", "9", "3", "10", "4", "11", "2", "1", "12", "8", "14", "13", "6", "15"];
+        let secretIndex = 0; // Tracks progress through the secret sequence
 
-        // --- RENDER INPUT LIST ---
-        function renderInputList() {
-            inputListEl.innerHTML = '';
-            // We iterate through the original sequence to keep order, but check if they exist in 'items'
-            const fullList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Or we can just use current items
-            
-            // To show removed items as "crossed out", we need to know what was removed.
-            // Let's use a master list.
-            const masterList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-            
-            masterList.forEach(val => {
-                const exists = items.includes(val);
-                const div = document.createElement('div');
-                div.className = `input-item ${exists ? '' : 'removed'}`;
-                
-                div.innerHTML = `
-                    <input type="checkbox" class="input-checkbox" ${exists ? 'checked' : ''} disabled>
-                    <span class="input-text">Option ${val}</span>
-                `;
-                inputListEl.appendChild(div);
-            });
+        // Colors (Picker Wheel Style)
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
+            '#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5',
+            '#E59866', '#D7BDE2', '#F0B27A', '#7DCEA0', '#C39BD3'
+        ];
 
-            entryCountEl.innerText = items.length;
+        // --- INITIALIZATION ---
+        // Default values to match your request
+        optInput.value = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15";
+
+        function updateData() {
+            // Split by newline and remove empty lines
+            items = optInput.value.split('\n').map(line => line.trim()).filter(line => line !== '');
+            countBadge.innerText = items.length;
+            drawWheel();
         }
+
+        optInput.addEventListener('input', updateData);
 
         // --- DRAW WHEEL ---
         function drawWheel() {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = canvas.width / 2 - 10;
-            
+            const radius = canvas.width / 2 - 20;
+            const arc = (Math.PI * 2) / (items.length || 1);
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Empty State
             if (items.length === 0) {
-                // Empty Wheel State
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                ctx.fillStyle = "#eee";
+                ctx.fillStyle = "#f0f2f5";
                 ctx.fill();
                 return;
             }
-
-            const arcSize = (Math.PI * 2) / items.length;
 
             ctx.save();
             ctx.translate(centerX, centerY);
             ctx.rotate(currentRotation * Math.PI / 180);
 
             items.forEach((item, i) => {
-                const angle = i * arcSize;
+                const angle = i * arc;
                 
-                // Segment
+                // Draw Segment
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                ctx.arc(0, 0, radius, angle, angle + arcSize);
+                ctx.arc(0, 0, radius, angle, angle + arc);
                 ctx.fillStyle = colors[i % colors.length];
                 ctx.fill();
-                ctx.strokeStyle = "rgba(255,255,255,0.2)";
-                ctx.lineWidth = 2;
+                
+                // White Divider
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 4;
                 ctx.stroke();
 
-                // Text
+                // Draw Text
                 ctx.save();
-                ctx.rotate(angle + arcSize / 2);
+                ctx.rotate(angle + arc / 2);
                 ctx.textAlign = "right";
                 ctx.fillStyle = "#fff";
-                ctx.font = "bold 60px sans-serif";
-                ctx.fillText(item, radius - 50, 20);
+                
+                // Adaptive Font Size
+                let fontSize = 50;
+                if (items.length > 10) fontSize = 40;
+                if (items.length > 20) fontSize = 30;
+                if (item.length > 5) fontSize = Math.max(20, fontSize - (item.length * 2));
+                
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                ctx.shadowColor = "rgba(0,0,0,0.2)";
+                ctx.shadowBlur = 4;
+                ctx.fillText(item, radius - 40, 15);
                 ctx.restore();
             });
 
             ctx.restore();
         }
 
-        // --- ANIMATION LOGIC ---
-        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+        // --- SPINNING LOGIC ---
+        function easeOutQuart(t) { return 1 - (--t) * t * t * t; }
 
         function spin() {
             if (isSpinning || items.length === 0) return;
             isSpinning = true;
 
-            // 1. DETERMINE TARGET FROM RIGGED LIST
-            let target = null;
-            
-            // Loop through rigged sequence to find the next available number
-            // (In case the user manually modified things, or we just moved to next)
-            while (target === null && rigIndex < riggedSequence.length) {
-                const candidate = riggedSequence[rigIndex];
-                if (items.includes(candidate)) {
-                    target = candidate;
-                    // Note: We do NOT increment rigIndex here. We increment it AFTER the spin completes.
-                    // This ensures we don't skip numbers if the animation is cancelled.
-                } else {
-                    rigIndex++; // Skip this rigged number if it's not in the wheel anymore
+            // 1. DECIDE THE WINNER (The Rig)
+            let winner = null;
+
+            // STRATEGY A: Check if we are in the "Secret Number Mode"
+            // We look through our secret sequence. The first number in the sequence that currently exists on the wheel wins.
+            for (let i = 0; i < secretSequence.length; i++) {
+                if (items.includes(secretSequence[i])) {
+                    winner = secretSequence[i];
+                    break;
                 }
             }
 
-            // Fallback: If rigged sequence is exhausted or invalid, pick random
-            if (target === null) {
-                const randomIdx = Math.floor(Math.random() * items.length);
-                target = items[randomIdx];
+            // STRATEGY B: Fallback (Custom Text)
+            // If the wheel has no numbers from the secret sequence (e.g., names),
+            // we default to the FIRST item in the input list.
+            if (!winner) {
+                winner = items[0]; 
             }
 
             // 2. CALCULATE ROTATION
-            // Pointer is at 0 degrees (Right side) in Canvas terms (actually, let's fix the pointer logic).
-            // In Canvas, 0 is 3 o'clock.
-            // If we draw segments starting from 0, the first segment is 0 to (360/N).
-            // To land Segment X on the Pointer (0 deg), we need to rotate the wheel such that Segment X is at 0.
-            // Actually, visually, the pointer is at the Right (0 degrees).
-            // So we need the center of the target segment to end up at 0 degrees (or 360).
-
-            const targetIndex = items.indexOf(target);
-            const segmentAngle = 360 / items.length;
+            const winnerIndex = items.indexOf(winner);
+            const arcDegree = 360 / items.length;
             
-            // The center of the target segment is currently at:
-            // (targetIndex * segmentAngle) + (segmentAngle / 2)
-            const currentPos = (targetIndex * segmentAngle) + (segmentAngle / 2);
+            // Current angle of the winner's center
+            const currentPos = (winnerIndex * arcDegree) + (arcDegree / 2);
             
-            // We want to rotate the wheel backwards so this point hits 0.
-            // Rotation = 360 - currentPos.
-            // Add jitter
-            const jitter = Math.floor(Math.random() * (segmentAngle * 0.8)) - (segmentAngle * 0.4);
+            // To align with pointer (Right/0 deg), we rotate backwards.
+            // Add randomness inside the slice so it's not always dead center
+            const jitter = Math.floor(Math.random() * (arcDegree * 0.7)) - (arcDegree * 0.35);
+            
+            // Target Rotation
             const landingRotation = 360 - currentPos + jitter;
-
-            // Add spins (5 to 10 full spins)
-            const extraSpins = (5 + Math.floor(Math.random() * 5)) * 360;
-            const totalRotation = currentRotation + extraSpins + (landingRotation - (currentRotation % 360));
             
-            // Ensure positive forward movement
-            let finalTargetRot = totalRotation;
-            if (finalTargetRot <= currentRotation) finalTargetRot += 360;
+            // Add spin loops (min 5 full spins)
+            const loops = (5 + Math.floor(Math.random() * 3)) * 360;
+            const totalRotation = currentRotation + loops + (landingRotation - (currentRotation % 360));
+            
+            // Force forward motion
+            let finalTarget = totalRotation;
+            if (finalTarget <= currentRotation) finalTarget += 360;
 
             // 3. ANIMATE
-            const duration = 5000; // 5 seconds
+            const duration = 6000; // 6 seconds
             const startTime = performance.now();
             const startRot = currentRotation;
 
             function animate(now) {
                 const elapsed = now - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                const ease = easeOutCubic(progress);
+                const ease = easeOutQuart(progress);
 
-                currentRotation = startRot + (finalTargetRot - startRot) * ease;
+                currentRotation = startRot + (finalTarget - startRot) * ease;
                 drawWheel();
 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
-                    endGame(target);
+                    finish(winner);
                 }
             }
             requestAnimationFrame(animate);
         }
 
-        function endGame(target) {
+        function finish(winner) {
             isSpinning = false;
             
-            // Show Modal
-            resultValueEl.innerText = target;
+            // Show result
+            resultValue.innerText = winner;
             modal.classList.add('active');
 
-            // --- REMOVE LOGIC ---
-            // 1. Remove from items array
-            items = items.filter(i => i !== target);
+            // --- AUTO REMOVE ---
+            // Remove the winner from the list
+            items = items.filter(i => i !== winner);
             
-            // 2. Advance Rigged Index (So next spin gets next number)
-            rigIndex++;
-
-            // 3. Update Inputs Panel UI
-            renderInputList();
-            
-            // 4. Redraw wheel happens when modal closes to avoid jarring shift
+            // Update the Input Box to reflect removal
+            optInput.value = items.join('\n');
+            countBadge.innerText = items.length;
         }
 
-        // Close Modal & Redraw Wheel with removed item
-        closeModalBtn.addEventListener('click', () => {
+        closeModal.addEventListener('click', () => {
             modal.classList.remove('active');
-            // The item was already removed from data, now we just see the updated wheel
-            // We reset rotation visually to 0 to keep math simple for next spin? 
-            // Or keep it. If we keep it, the segments shift.
-            // Easier to keep current rotation but the segments will change size.
-            // Let's just redraw.
-            drawWheel();
+            drawWheel(); // Redraw to show the slice is gone
         });
 
         spinBtn.addEventListener('click', spin);
 
         // Init
-        renderInputList();
-        drawWheel();
-        
+        updateData();
+
     </script>
 </body>
 </html>
